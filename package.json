@@ -1,0 +1,17 @@
+{
+    "name": "caf_iot_cli",
+    "description": "Cloud Assistants lib for IoT devices that interact with CAs using node.js",
+    "version": "0.0.1",
+    "author": "Antonio Lain <antlai@cafjs.com>",
+    "dependencies": {
+        "async" : ">=0.1.9",
+        "request" : ">= 2.9.202"
+    },
+    "main": "index",
+    "homepage": "http://www.cafjs.com",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/cafjs/caf_iot_cli.git"
+    },
+  "engines": { "node": ">= 0.8.1 " }
+}
