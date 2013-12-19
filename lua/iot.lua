@@ -41,11 +41,16 @@ local function gcResponses(maps)
       return true
    end
    return false
-
 end
 
 local function slice(array, delta)
-
+   local res = {}
+   local k = 1 
+   for i = delta+1, #array do
+      res[k] = array[i]
+      k = k + 1
+   end
+   return res      
 end
 
 local function getCommands(maps)
@@ -82,10 +87,10 @@ local function addResponses(firstIndex, outputs, maps)
 end
 
 local function updateMaps(maps)
-   local toCloud = maps.deviceView.toCloud;
-   local fromCloud = maps.deviceView.fromCloud;
-   toCloud.version = toCloud.version + 1;
-   fromCloud.version = maps.caView.fromCloud.version;
+   local toCloud = maps.deviceView.toCloud
+   local fromCloud = maps.deviceView.fromCloud
+   toCloud.version = toCloud.version + 1
+   fromCloud.version = maps.caView.fromCloud.version
 end
 
 local function syncMaps(context, spec, maps)
