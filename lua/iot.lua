@@ -22,6 +22,76 @@ local function emptyView(isDevice)
            fromCloud =  {version = 0, values = {}}}
 end
 
+local function isEmptyView(view) 
+   return (view.toCloud.version == 0) and (view.fromCloud.version == 0)
+end
+
+local function gcResponses(maps)
+   local toCloud = maps.deviceView.toCloud
+   local commands = toCloud and toCloud.values and toCloud.values.commands
+   local lastModifVersion = commands and commands.lastModified
+   local lastSeenVersion = maps.caView and maps.caView.toCloud and 
+      maps.caView.toCloud.version
+   if (lastSeenVersion ~= nil) and (lastModifVersion ~= nil) and
+      (lastSeenVersion >= lastModifVersion) and commands.values then
+      local firstIndex = commands.firstIndex or 0
+      commands.firstIndex = firstIndex + #commands.values
+      commands.lastModified = nil
+      commands.values = {}
+      return true
+   end
+   return false
+
+end
+
+local function slice(array, delta)
+
+end
+
+local function getCommands(maps)
+   local fromCloud = maps.caView.fromCloud
+   local fromCloudCommands = (fromCloud.values and fromCloud.values.commands) 
+      or {}
+   local toCloud = maps.deviceView.toCloud
+   local toCloudCommands = (toCloud.values and toCloud.values.commands) or {}
+   local firstIndex =  toCloudCommands.firstIndex or 0
+   firstIndex = firstIndex + ((toCloudCommands.values and
+                               #toCloudCommands.values) or 0)
+   local firstIndexFromCloud = fromCloudCommands.firstIndex or 0
+   local delta
+   if firstIndex > firstIndexFromCloud then
+      delta = firstIndex - firstIndexFromCloud
+   else
+      delta = 0
+   end
+   if fromCloudCommands.values and (#fromCloudCommands.values > delta) then
+      return {firstIndex = firstIndexFromCloud + delta, 
+              commands = slice(fromCloudCommands.values, delta)}
+   else
+      return nil
+   end
+end
+
+local function addResponses(firstIndex, outputs, maps)
+   local toCloud = maps.deviceView.toCloud
+   toCloud.values = toCloud.values or {}
+   toCloud.values.commands = toCloud.values.commands or {}
+   toCloud.values.commands.firstIndex = firstIndex
+   toCloud.values.commands.lastModified = toCloud.version + 1
+   toCloud.values.commands.values = outputs
+end
+
+local function updateMaps(maps)
+   local toCloud = maps.deviceView.toCloud;
+   local fromCloud = maps.deviceView.fromCloud;
+   toCloud.version = toCloud.version + 1;
+   fromCloud.version = maps.caView.fromCloud.version;
+end
+
+local function syncMaps(context, spec, maps)
+
+
+end
 
 local function mainConstructor(context, spec, maps) 
    local counter = 0
@@ -37,14 +107,14 @@ local function mainConstructor(context, spec, maps)
               maps.deviceView = maps.deviceView or emptyView(true)
               local inMap =  maps.caView.fromCloud.values;
               local outMap = maps.deviceView.toCloud.values;
-              --- write local data in outMap
+              --- 1 write local data in outMap
               err = readSensorsHook(outMap)
               if err then
                  return err
               end
-              --- garbage collect old responses
+              --- 2 garbage collect old responses
               gcResponses(maps)
-              --- execute commands from request
+              --- 3 execute commands from request
               local commandObj = getCommands(maps)
               if commandObj then
                  local commands = commandObj.commands
@@ -59,13 +129,15 @@ local function mainConstructor(context, spec, maps)
                  end
                  addResponses(firstIndex, data, maps)                 
               end
-              --- always call the main function  
+              --- 4 always call the main function  
               err = mainHook(inMap, outMap)
               if err then 
                  return err
               end
-              -- update and sync maps with remote target
-              updateMaps(maps)
+              -- 5 update and sync maps with remote target
+              if (not isEmptyView(maps.deviceView)) then
+                 updateMaps(maps)
+              end
               return syncMaps(context, spec, maps)              
            end)
 end
