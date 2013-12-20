@@ -12,6 +12,7 @@ end
 
 local function executeCommand(command, mapIn, mapOut)
    print("Executing command " .. command)
+   return nil, "ok"
 end
 
 local function mainHook(mapIn, mapOut)
