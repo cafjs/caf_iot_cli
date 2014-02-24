@@ -1,4 +1,4 @@
-require "luarocks.loader" 
+-- require "luarocks.loader" 
 local iot = require("iot")
 local json = require("dkjson")
 

@@ -1,4 +1,4 @@
-require "luarocks.loader" 
+-- require "luarocks.loader" 
 local socket = require("socket")
 local http = require("socket.http")
 local ltnl12 = require("ltn12")
@@ -218,6 +218,7 @@ function exports.newMainLoop(spec)
       while true do
          err, data = iter()
          if err then
+            print(json.encode(err))
             return err
          else
             print(json.encode(data))
